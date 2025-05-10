@@ -1,6 +1,7 @@
 import NextAuth from "next-auth"
 import GitHub from "next-auth/providers/github"
 import { SupabaseAdapter } from "@auth/supabase-adapter"
+import { SignJWT } from "jose"
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
     providers: [GitHub],
@@ -17,11 +18,30 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             const isOnDashboard = nextUrl.pathname.startsWith('/dashboard');
             if (isOnDashboard) {
                 if (isLoggedIn) return true;
-                return false; 
+                return false;
             } else if (isLoggedIn) {
                 return Response.redirect(new URL('/dashboard', nextUrl));
             }
             return true;
         },
+        async session({ session, user }) {
+            const secret = process.env.SUPABASE_JWT_SECRET;
+            if (secret) {
+                const jwtSecret = new TextEncoder().encode(secret)
+                const payload = {
+                    aud: "authenticated",
+                    exp: Math.floor(new Date(session.expires).getTime() / 1000),
+                    sub: user.id,
+                    email: user.email,
+                    role: "authenticated",
+                }
+                const alg = 'HS256'
+                const jwt = await new SignJWT(payload)
+                    .setProtectedHeader({ alg })
+                    .sign(jwtSecret)
+                session.supabaseAccessToken = jwt;
+            }
+            return session
+        }
     }
 })
