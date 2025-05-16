@@ -1,13 +1,14 @@
+import Sidenav from "@/app/ui/dashboard/sidenav"
+
 export default function DashboardLayout({
     children,
   }: {
     children: React.ReactNode
   }) {
     return (
-        <div>
-          {/* Layout UI */}
-          {/* Place children where you want to render a page or nested layout */}
-          <main>{children}</main>
+        <div className="h-screen flex bg-white">
+          <Sidenav/>
+          <div className="p-4 grow">{children}</div>
         </div>
     )
   }

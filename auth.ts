@@ -16,12 +16,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         authorized({ auth, request: { nextUrl } }) {
             const isLoggedIn = !!auth?.user;
             const isOnDashboard = nextUrl.pathname.startsWith('/dashboard');
+            const isOnHome = nextUrl.pathname === '/';
+
             if (isOnDashboard) {
-                if (isLoggedIn) return true;
-                return false;
-            } else if (isLoggedIn) {
+                return isLoggedIn; // only allow dashboard if logged in
+            }
+
+            if (isLoggedIn && isOnHome) {
                 return Response.redirect(new URL('/dashboard', nextUrl));
             }
+
             return true;
         },
         async session({ session, user }) {

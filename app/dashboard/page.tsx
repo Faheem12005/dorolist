@@ -1,7 +1,6 @@
-import { auth, signOut } from "@/auth";
-import { getUser } from "@/app/lib/actions";
+import { signOut } from "@/auth";
+
 export default async function Dashboard() {
-  getUser();
   return (
     <>
       <p>Dashboard</p>

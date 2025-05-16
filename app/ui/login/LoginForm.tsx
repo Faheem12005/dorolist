@@ -1,10 +1,9 @@
-import { authenthicate } from "@/app/lib/actions"
 import { signIn } from "@/auth"
 
 export default function LoginForm() {
     return (
         <div className="flex items-center flex-col">
-            <form action={authenthicate} className="space-y-2 space-x-2">
+            <form className="space-y-2 space-x-2">
                 <div className="w-full">
                     <label htmlFor="username">Username: </label>
                     <input placeholder="Username" id="username" name="username"></input>
