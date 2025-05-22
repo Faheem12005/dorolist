@@ -53,10 +53,6 @@ export async function createProjectAction(formData: FormData) {
         desc: formData.get('projectDesc'),
         deadline: formData.get('deadline'),
     }
-    let deadline: string | null = null;
-    if (rawFormData.deadline) {
-        deadline = new Date(rawFormData.deadline as string + "T23:59:59Z").toISOString();
-    }
     const session = await auth()
     const { supabaseAccessToken } = session!
     const supabase = createServerClient(supabaseAccessToken!)

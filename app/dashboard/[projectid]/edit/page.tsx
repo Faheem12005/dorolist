@@ -1,8 +1,6 @@
 import { fetchTasks } from "@/app/lib/actions";
 import { addTask } from "@/app/lib/actions";
 import EditTaskList from "@/app/ui/edit/edit-tasks";
-import { PencilSquareIcon } from "@heroicons/react/24/outline";
-import { TrashIcon } from "@heroicons/react/24/outline";
 
 export default async function Page({
   params,
