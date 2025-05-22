@@ -9,8 +9,6 @@ type TaskListProps = {
     tasks: Tables<"tasks">[];
 };
 
-type taskNo = number | string | null;
-
 export default function Timer({ tasks }: TaskListProps) {
     const [isPaused, setIsPaused] = useState(true);
     const [hours, setHours] = useState(0);
@@ -19,11 +17,9 @@ export default function Timer({ tasks }: TaskListProps) {
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
     const searchParams = useSearchParams();
-    let taskNo: taskNo  = searchParams.get('taskNo');
-    let taskIndex: number | null = null;
-    if (taskNo !== null && !isNaN(Number(taskNo))) {
-        taskIndex = parseInt(taskNo as string, 10);
-    }
+    const taskId = searchParams.get('taskNo'); 
+
+    const activeTask = tasks.find((task) => task.id === taskId);
 
     useEffect(() => {
         if (isPaused) {
@@ -34,17 +30,17 @@ export default function Timer({ tasks }: TaskListProps) {
             if (hours === 0 && minutes === 0 && seconds === 0) {
                 setIsPaused(true);
             }
-            if(seconds > 0) {
+            if (seconds > 0) {
                 setSeconds(seconds - 1);
             }
-            else if(seconds == 0 && minutes > 0) {
+            else if (seconds === 0 && minutes > 0) {
                 setMinutes(minutes - 1);
                 setSeconds(59);
             }
-            else if(seconds == 0 && minutes == 0 && hours > 0) {
+            else if (seconds === 0 && minutes === 0 && hours > 0) {
                 setHours(hours - 1);
                 setMinutes(59);
-                setSeconds(59)
+                setSeconds(59);
             }
         }, 1000);
         return () => {
@@ -72,7 +68,9 @@ export default function Timer({ tasks }: TaskListProps) {
 
     return (
         <div className="flex justify-center items-center flex-col bg-gray-100 p-15 rounded-2xl mr-3">
-                <p>Active Task: <span>{taskIndex !== null && tasks[taskIndex] ? tasks[taskIndex].task : "None"}</span></p>
+            <p className=" bg-gray-800 text-white text-xs rounded-lg px-3 py-1">
+                Active Task: <span>{activeTask ? activeTask.task : "None"}</span>
+            </p>
             <div className="text-7xl flex items-center">
                 <input
                     min={0}

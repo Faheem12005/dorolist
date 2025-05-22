@@ -27,12 +27,12 @@ export default async function Page({
               >
                 <DocumentPlusIcon className="h-7 w-7" />
                 <span className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-1 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 group-hover:translate-x-0 translate-x-4 transition-all duration-200 pointer-events-none whitespace-nowrap">
-                  Add Task
+                  Edit Tasks
                 </span>
               </Link>
             </div>
           </div>
-          <TaskList tasks={tasks.tasks} />
+          <TaskList tasks={tasks.tasks}/>
         </div>
       </div>
     </div>
