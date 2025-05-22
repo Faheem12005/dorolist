@@ -1,6 +1,7 @@
 import { fetchTasks } from "@/app/lib/actions";
 import { addTask } from "@/app/lib/actions";
 import EditTaskList from "@/app/ui/edit/edit-tasks";
+import { Tables } from "@/database.types";
 
 export default async function Page({
   params,
@@ -10,8 +11,8 @@ export default async function Page({
   const { projectid } = await params;
   const [tasks] = await fetchTasks(projectid);
 
-  const incompleteTasks = tasks.tasks.filter((task: any) => !task.completed);
-  const completedTasks = tasks.tasks.filter((task: any) => !!task.completed);
+  const incompleteTasks = tasks.tasks.filter((task: Tables<"tasks">) => !task.completed);
+  const completedTasks = tasks.tasks.filter((task: Tables<"tasks">) => !!task.completed);
 
   return (
     <div className="min-h-screen flex flex-col p-5 w-full">

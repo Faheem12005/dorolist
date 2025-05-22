@@ -74,17 +74,19 @@ export async function createProjectAction(formData: FormData) {
 }
 
 export async function fetchProjects() {
-    const session = await auth()
-    const { supabaseAccessToken } = session!
-    const supabase = createServerClient(supabaseAccessToken!)
+    const session = await auth();
+    if (!session?.user?.id) {
+        throw new Error("No user id in session");
+    }
+    const { supabaseAccessToken } = session;
+    const supabase = createServerClient(supabaseAccessToken!);
     const { data, error } = await supabase.from('users').select(`
         projects (
-        *)`).eq('id', session?.user.id!)
+        *)`).eq('id', session.user.id);
 
     if (data) {
         return data;
-    }
-    else {
+    } else {
         console.error("Database error: ", error);
         throw new Error("Failed to fetch project information.");
     }
