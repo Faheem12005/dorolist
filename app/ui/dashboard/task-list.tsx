@@ -9,7 +9,7 @@ import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 
 type TaskListProps = {
-  tasks: Tables<"tasks">[];
+  tasks: Tables<"tasks">[] | undefined;
 };
 
 export default function TaskList({ tasks }: TaskListProps) {
@@ -29,12 +29,12 @@ export default function TaskList({ tasks }: TaskListProps) {
     });
   };
 
-  const incompleteTasks = tasks.filter((task) => !task.completed);
-  const completedTasks = tasks.filter((task) => !!task.completed);
+  const incompleteTasks = tasks && tasks.filter((task) => !task.completed);
+  const completedTasks = tasks && tasks.filter((task) => !!task.completed);
 
   return (
     <div className="flex flex-col gap-2 my-2">
-      {incompleteTasks.length > 0 ? (
+      {incompleteTasks && incompleteTasks.length > 0 ? (
         incompleteTasks.map((task) => (
           <div
             key={task.id}
@@ -78,11 +78,11 @@ export default function TaskList({ tasks }: TaskListProps) {
         </div>
       )}
 
-      {completedTasks.length > 0 && (
+      {completedTasks && completedTasks.length > 0 && (
         <p className="text-xs text-gray-500 mt-4 mb-1 px-2">Completed Tasks</p>
       )}
 
-      {completedTasks.length > 0
+      {completedTasks && completedTasks.length > 0
         ? completedTasks.map((task) => (
             <div
               key={task.id}

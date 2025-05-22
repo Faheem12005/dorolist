@@ -30,7 +30,7 @@ export async function addTask(formData: FormData) {
     const session = await auth()
     const { supabaseAccessToken } = session!
     const supabase = createServerClient(supabaseAccessToken!)
-    const { error } = await supabase.from('tasks')
+    const { data, error } = await supabase.from('tasks')
         .insert([
             {
                 completed: false,
@@ -38,12 +38,13 @@ export async function addTask(formData: FormData) {
                 task: typeof rawFormData.name === 'string' ? rawFormData.name : null,
             }
         ])
+        .select()
+
     if (error) {
         console.error("Database error: ", error);
         throw new Error("Failed to insert task into database.");
     }
-    revalidatePath(`/dashboard${rawFormData.projectId}/edit`);
-    redirect(`/dashboard/${rawFormData.projectId}/edit`);
+    return data;
 }
 
 
@@ -74,17 +75,19 @@ export async function createProjectAction(formData: FormData) {
 }
 
 export async function fetchProjects() {
-    const session = await auth()
-    const { supabaseAccessToken } = session!
-    const supabase = createServerClient(supabaseAccessToken!)
+    const session = await auth();
+    if (!session?.user?.id) {
+        throw new Error("No user id in session");
+    }
+    const { supabaseAccessToken } = session;
+    const supabase = createServerClient(supabaseAccessToken!);
     const { data, error } = await supabase.from('users').select(`
         projects (
-        *)`).eq('id', session?.user.id!)
+        *)`).eq('id', session.user.id);
 
     if (data) {
         return data;
-    }
-    else {
+    } else {
         console.error("Database error: ", error);
         throw new Error("Failed to fetch project information.");
     }
@@ -94,16 +97,14 @@ export async function fetchTasks(projectId: string) {
     const session = await auth()
     const { supabaseAccessToken } = session!
     const supabase = createServerClient(supabaseAccessToken!)
-    const { data, error } = await supabase.from('projects').select('name, deadline, tasks(*)'
-    ).eq('tasks.project_id', projectId).eq('id', projectId).limit(1)
+    const { data, error } = await supabase.from('tasks').select('*'
+    ).eq('project_id', projectId)
 
-    if (data) {
-        return data;
-    }
-    else {
+    if (error) {
         console.error("Database error: ", error);
         throw new Error("Failed to fetch project information.");
     }
+    return data;
 }
 
 export async function onEditTask(taskId: string, newTask: string) {
@@ -158,4 +159,19 @@ export async function deleteProject(projectId: string) {
         console.error("Database Error: ", error);
         throw new Error("failed to delete project.");
     }
+}
+
+export async function fetchProjectOnId(projectId: string) {
+ const session = await auth();
+    if (!session) throw new Error("No session");
+    const { supabaseAccessToken } = session;
+    const supabase = createServerClient(supabaseAccessToken!);
+    const { data, error } = await supabase.from('projects')
+        .select("*")
+        .eq('id', projectId);
+    if (error) {
+        console.error("Database Error: ", error);
+        throw new Error("failed to delete project.");
+    }
+    return data;
 }

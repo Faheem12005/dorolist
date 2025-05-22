@@ -1,79 +1,82 @@
 "use client";
 
-import { useState } from "react";
-import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { useOptimistic, startTransition } from "react";
 import { Tables } from "@/database.types";
-import { onEditTask, onDeleteTask } from "@/app/lib/actions";
+import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { useState } from "react";
 
-type TaskListClientProps = {
-  incompleteTasks: Tables<'tasks'>[];
-  completedTasks: Tables<'tasks'>[];
+type OptimisticTaskListProps = {
+  editTaskAction: (taskId: string, newTaskName: string) => Promise<void>;
+  deleteTaskAction: (taskId: string) => Promise<void>;
+  tasks: Tables<"tasks">[];
 };
 
-export default function EditTaskList({
-  incompleteTasks,
-  completedTasks,
-}: TaskListClientProps) {
-  const [localIncompleteTasks, setLocalIncompleteTasks] = useState(incompleteTasks);
-  const [localCompletedTasks, setLocalCompletedTasks] = useState(completedTasks);
+export default function OptimisticTaskList({ tasks, editTaskAction, deleteTaskAction }: OptimisticTaskListProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const handleEditClick = (task: Tables<'tasks'>) => {
-    setEditingId(task.id);
-    setEditValue(task.task!);
-  };
-
-  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEditValue(e.target.value);
-  };
-
-  const handleEditSubmit = async (task: Tables<'tasks'>) => {
-    if (editValue.trim() && editValue !== task.task && onEditTask) {
-      await onEditTask(task.id, editValue.trim());
-      setLocalIncompleteTasks((prev) =>
-        prev.map((t) =>
-          t.id === task.id ? { ...t, task: editValue.trim() } : t
-        )
-      );
-      setLocalCompletedTasks((prev) =>
-        prev.map((t) =>
-          t.id === task.id ? { ...t, task: editValue.trim() } : t
-        )
-      );
+  const [optimisticTasks, updateOptimisticTasks] = useOptimistic(
+    tasks,
+    (
+      state,
+      action: { type: "edit" | "delete"; id: string; value?: string }
+    ) => {
+      if (action.type === "edit" && action.value) {
+        return state.map((task) =>
+          task.id === action.id ? { ...task, task: action.value ?? null } : task
+        );
+      }
+      if (action.type === "delete") {
+        return state.filter((task) => task.id !== action.id);
+      }
+      return state;
     }
-    setEditingId(null);
+  );
+
+  // Edit logic
+  const handleEdit = (task: Tables<"tasks">) => {
+    setEditingId(task.id);
+    setEditValue(task.task ?? "");
   };
 
-  const handleEditKeyDown = async (
-    e: React.KeyboardEvent<HTMLInputElement>,
-    task: Tables<'tasks'>
-  ) => {
-    if (e.key === "Enter") {
-      await handleEditSubmit(task);
-    } else if (e.key === "Escape") {
+  const handleEditSubmit = async (task: Tables<"tasks">) => {
+    if (editValue.trim() && editValue !== task.task) {
+      startTransition(() => {
+        updateOptimisticTasks({
+          type: "edit",
+          id: task.id,
+          value: editValue.trim(),
+        });
+      });
+      setEditingId(null);
+      startTransition(async () => {
+        await editTaskAction(task.id, editValue.trim());
+      });
+    } else {
       setEditingId(null);
     }
   };
 
-  // Delete logic
   const handleDelete = async (taskId: string) => {
-    if (onDeleteTask) {
-      await onDeleteTask(taskId);
-      setLocalIncompleteTasks((prev) => prev.filter((t) => t.id !== taskId));
-      setLocalCompletedTasks((prev) => prev.filter((t) => t.id !== taskId));
-    }
+    startTransition(() => {
+      updateOptimisticTasks({ type: "delete", id: taskId });
+    });
     setDeleteId(null);
+    startTransition(async () => {
+      await deleteTaskAction(taskId);
+
+    });
   };
 
   return (
     <div className="flex flex-col gap-4 my-4">
-      {/* Delete confirmation popup */}
       {deleteId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-lg shadow-lg p-6 flex flex-col items-center">
-            <p className="mb-4 text-gray-800">Are you sure you want to delete this task?</p>
+            <p className="mb-4 text-gray-800">
+              Are you sure you want to delete this task?
+            </p>
             <div className="flex gap-4">
               <button
                 className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
@@ -92,13 +95,13 @@ export default function EditTaskList({
         </div>
       )}
 
-      {localIncompleteTasks.length > 0 ? (
-        localIncompleteTasks.map((task) => (
+      {optimisticTasks.length > 0 ? (
+        optimisticTasks.map((task) => (
           <div
             key={task.id}
             className="bg-gray-50 border border-gray-200 rounded-lg px-5 py-4 flex items-center justify-between shadow-sm transition group hover:bg-gray-100 hover:border-gray-300"
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-5">
               <input
                 type="checkbox"
                 disabled
@@ -109,9 +112,12 @@ export default function EditTaskList({
                 <input
                   className="border border-gray-300 rounded px-2 py-1 text-base font-medium"
                   value={editValue}
-                  onChange={handleEditChange}
+                  onChange={(e) => setEditValue(e.target.value)}
                   onBlur={() => setEditingId(null)}
-                  onKeyDown={(e) => handleEditKeyDown(e, task)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleEditSubmit(task);
+                    else if (e.key === "Escape") setEditingId(null);
+                  }}
                   autoFocus
                 />
               ) : (
@@ -125,10 +131,18 @@ export default function EditTaskList({
                   {task.task}
                 </p>
               )}
-              <button type="button" onClick={() => handleEditClick(task)} className="hover:cursor-pointer">
+              <button
+                type="button"
+                onClick={() => handleEdit(task)}
+                className="hover:cursor-pointer"
+              >
                 <PencilSquareIcon className="h-4 w-4" />
               </button>
-              <button type="button" onClick={() => setDeleteId(task.id)} className="hover:cursor-pointer">
+              <button
+                type="button"
+                onClick={() => setDeleteId(task.id)}
+                className="hover:cursor-pointer"
+              >
                 <TrashIcon className="h-4 w-4" />
               </button>
             </div>
@@ -139,41 +153,6 @@ export default function EditTaskList({
           <p className="text-gray-600 text-xs">Add a task to get started!</p>
         </div>
       )}
-
-      {localCompletedTasks.length > 0 && (
-        <p className="text-xs text-gray-500 mt-4 mb-1 px-2">
-          Completed Tasks
-        </p>
-      )}
-
-      {localCompletedTasks.length > 0 &&
-        localCompletedTasks.map((task) => (
-          <div
-            key={task.id}
-            className="bg-gray-50 border border-gray-200 rounded-lg px-5 py-4 flex items-center justify-between shadow-sm transition group opacity-70 hover:bg-gray-100 hover:border-gray-300"
-          >
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                disabled
-                checked={!!task.completed}
-                className="accent-gray-800 h-5 w-5 rounded border-gray-300"
-              />
-              <p
-                className={`text-base font-medium ${
-                  task.completed
-                    ? "line-through text-gray-400"
-                    : "text-gray-800"
-                }`}
-              >
-                {task.task}
-              </p>
-              <button type="button" onClick={() => setDeleteId(task.id)}>
-                <TrashIcon className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        ))}
     </div>
   );
 }

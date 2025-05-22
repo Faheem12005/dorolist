@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 
 type TaskListProps = {
-    tasks: Tables<"tasks">[];
+    tasks: Tables<"tasks">[] | undefined;
 };
 
 export default function Timer({ tasks }: TaskListProps) {
@@ -19,7 +19,7 @@ export default function Timer({ tasks }: TaskListProps) {
     const searchParams = useSearchParams();
     const taskId = searchParams.get('taskNo'); 
 
-    const activeTask = tasks.find((task) => task.id === taskId);
+    const activeTask = tasks && tasks.find((task) => task.id === taskId);
 
     useEffect(() => {
         if (isPaused) {

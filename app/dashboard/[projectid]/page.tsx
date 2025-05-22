@@ -10,13 +10,13 @@ export default async function Page({
   params: Promise<{ projectid: string }>;
 }) {
   const { projectid } = await params;
-  const [tasks] = await fetchTasks(projectid);
+  const tasks = await fetchTasks(projectid);
   return (
     <div className="w-full h-full flex flex-col">
-      <p className="text-3xl font-bold">{tasks.name}</p>
-      <p>{new Date(tasks.deadline!).toDateString()}</p>
+      {/* <p className="text-3xl font-bold">{tasks?.projectName}</p> */}
+      {/* <p>{tasks?.deadline ? new Date(tasks.deadline).toDateString() : "No deadline"}</p> */}
       <div className="w-full grid grid-cols-2 grow">
-        <Timer tasks={tasks.tasks} />
+        <Timer tasks={tasks} />
         <div>
           <div className="flex gap-2 items-center">
             <h1 className="text-3xl font-bold">Tasks</h1>
@@ -32,7 +32,7 @@ export default async function Page({
               </Link>
             </div>
           </div>
-          <TaskList tasks={tasks.tasks}/>
+          <TaskList tasks={tasks}/>
         </div>
       </div>
     </div>
