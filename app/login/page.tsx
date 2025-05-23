@@ -1,17 +1,11 @@
-import LoginForm from "../ui/login/LoginForm"
-import { redirect } from "next/navigation"
-import { auth } from "@/auth"
+import { LoginForm } from "@/components/login-form"
 
-export default async function LoginPage() {
-    const session = await auth()
-    if (session?.user) {
-        console.log(session.user)
-        redirect('/dashboard')
-    }
-
-    return (
-        <main className="flex flex-col items-center justify-center h-screen">
-            <LoginForm/>
-        </main>
-    )
+export default function Page() {
+  return (
+    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
+      <div className="w-full max-w-sm">
+        <LoginForm />
+      </div>
+    </div>
+  )
 }
