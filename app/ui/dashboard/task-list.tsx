@@ -14,7 +14,13 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationNext } from "@/components/ui/pagination";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationPrevious,
+  PaginationNext,
+} from "@/components/ui/pagination";
 import { Badge } from "@/components/ui/badge";
 
 type TaskListProps = {
@@ -27,6 +33,7 @@ export default function TaskList({ tasks }: TaskListProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [page, setPage] = useState(1);
+  const [completedPage, setCompletedPage] = useState(1);
 
   const incompleteTasks = useMemo(
     () => (tasks ?? []).filter((task) => !task.completed),
@@ -37,11 +44,17 @@ export default function TaskList({ tasks }: TaskListProps) {
     [tasks]
   );
 
-  // Pagination logic
+  // Pagination logic for incomplete and completed tasks
   const totalPages = Math.ceil((incompleteTasks.length || 1) / PAGE_SIZE);
   const paginatedTasks = incompleteTasks.slice(
     (page - 1) * PAGE_SIZE,
     page * PAGE_SIZE
+  );
+
+  const completedTotalPages = Math.ceil((completedTasks.length || 1) / PAGE_SIZE);
+  const paginatedCompletedTasks = completedTasks.slice(
+    (completedPage - 1) * PAGE_SIZE,
+    completedPage * PAGE_SIZE
   );
 
   const handleToggle = async (id: string) => {
@@ -142,7 +155,7 @@ export default function TaskList({ tasks }: TaskListProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {completedTasks.map((task) => (
+            {paginatedCompletedTasks.map((task) => (
               <div
                 key={task.id}
                 className="flex items-center justify-between py-3 border-b last:border-b-0 opacity-70"
@@ -167,6 +180,33 @@ export default function TaskList({ tasks }: TaskListProps) {
               </div>
             ))}
           </CardContent>
+          {completedTotalPages > 1 && (
+            <CardFooter>
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => setCompletedPage((p) => Math.max(1, p - 1))}
+                      aria-disabled={completedPage === 1}
+                      className={completedPage === 1 ? "pointer-events-none opacity-50" : ""}
+                    />
+                  </PaginationItem>
+                  <PaginationItem>
+                    <span className="text-xs px-2">
+                      Page {completedPage} of {completedTotalPages}
+                    </span>
+                  </PaginationItem>
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => setCompletedPage((p) => Math.min(completedTotalPages, p + 1))}
+                      aria-disabled={completedPage === completedTotalPages}
+                      className={completedPage === completedTotalPages ? "pointer-events-none opacity-50" : ""}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </CardFooter>
+          )}
         </Card>
       )}
     </div>

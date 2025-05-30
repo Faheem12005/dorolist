@@ -55,11 +55,18 @@ export async function AppSidebar() {
               className="w-full justify-start gap-2 px-2 py-1.5"
             >
               <Avatar className="h-8 w-8">
-                <AvatarImage src={session?.user?.image ?? ""} alt={session?.user?.name ?? "User"} />
-                <AvatarFallback>{session?.user?.name?.[0] ?? "?"}</AvatarFallback>
+                <AvatarImage
+                  src={session?.user?.image ?? ""}
+                  alt={session?.user?.name ?? "User"}
+                />
+                <AvatarFallback>
+                  {session?.user?.name?.[0] ?? "?"}
+                </AvatarFallback>
               </Avatar>
               <div className="flex flex-col text-left">
-                <span className="text-sm font-medium">{session?.user?.name ?? "User"}</span>
+                <span className="text-sm font-medium">
+                  {session?.user?.name ?? "User"}
+                </span>
                 <span className="text-xs text-muted-foreground">
                   {session?.user?.email ?? ""}
                 </span>
@@ -71,14 +78,30 @@ export async function AppSidebar() {
               Account
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="text-red-600 focus:text-red-700"
-            >
-              <button onClick={async() => {
-                'use server'
-                await signOut()
-                redirect('/login')
-              }}>Logout</button>
+            <DropdownMenuItem className="p-0">
+              <button
+                className="w-full hover:cursor-pointer text-left px-3 py-2 rounded flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-red-200"
+                onClick={async () => {
+                  "use server";
+                  await signOut();
+                  redirect("/login");
+                }}
+              >
+                <svg
+                  className="w-4 h-4 mr-2 text-red-500"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1"
+                  />
+                </svg>
+                Logout
+              </button>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
