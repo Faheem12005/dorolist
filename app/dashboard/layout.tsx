@@ -1,16 +1,16 @@
-import Sidenav from "@/app/ui/dashboard/sidenav"
-import { ToastContainer } from "react-toastify"
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
 
-export default function DashboardLayout({
-    children,
-  }: {
-    children: React.ReactNode
-  }) {
-    return (
-        <div className="h-screen flex bg-white">
-          <ToastContainer autoClose={1500}/>
-          <Sidenav/>
-          <div className="p-4 grow">{children}</div>
+export default function Layout({ children }: { children: React.ReactNode }) {
+  return (
+    <SidebarProvider>
+      <div className="flex h-screen w-screen">
+        <AppSidebar />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <SidebarTrigger />
+          <main className="flex-1 overflow-auto">{children}</main>
         </div>
-    )
-  }
+      </div>
+    </SidebarProvider>
+  );
+}

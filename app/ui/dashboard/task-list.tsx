@@ -3,112 +3,172 @@
 import { Tables } from "@/database.types";
 import Link from "next/link";
 import Image from "next/image";
-import { useTransition } from "react";
+import { useTransition, useState, useMemo } from "react";
 import { onCompleteTask } from "@/app/lib/actions";
-import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationNext } from "@/components/ui/pagination";
+import { Badge } from "@/components/ui/badge";
 
 type TaskListProps = {
   tasks: Tables<"tasks">[] | undefined;
 };
 
+const PAGE_SIZE = 4;
+
 export default function TaskList({ tasks }: TaskListProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [page, setPage] = useState(1);
+
+  const incompleteTasks = useMemo(
+    () => (tasks ?? []).filter((task) => !task.completed),
+    [tasks]
+  );
+  const completedTasks = useMemo(
+    () => (tasks ?? []).filter((task) => !!task.completed),
+    [tasks]
+  );
+
+  // Pagination logic
+  const totalPages = Math.ceil((incompleteTasks.length || 1) / PAGE_SIZE);
+  const paginatedTasks = incompleteTasks.slice(
+    (page - 1) * PAGE_SIZE,
+    page * PAGE_SIZE
+  );
 
   const handleToggle = async (id: string) => {
     startTransition(() => {
-      toast.promise(
-        onCompleteTask(id).then(() => router.refresh()),
-        {
-          pending: "Submitting...",
-          success: "Task Submitted! 👌",
-          error: "Something went Wrong! 🤯",
-        }
-      );
+      onCompleteTask(id).then(() => router.refresh());
     });
   };
 
-  const incompleteTasks = tasks && tasks.filter((task) => !task.completed);
-  const completedTasks = tasks && tasks.filter((task) => !!task.completed);
-
   return (
-    <div className="flex flex-col gap-2 my-2">
-      {incompleteTasks && incompleteTasks.length > 0 ? (
-        incompleteTasks.map((task) => (
-          <div
-            key={task.id}
-            className="bg-gray-50 border border-gray-200 rounded-lg px-5 py-4 flex items-center justify-between shadow-sm hover:shadow transition group"
-          >
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                checked={task.completed!}
-                onChange={() => handleToggle(task.id)}
-                className="accent-gray-800 h-5 w-5 rounded border-gray-300 transition-all duration-200"
-                aria-label="Toggle complete"
-                disabled={isPending}
-              />
-              <Link
-                href={`/dashboard/${task.project_id}/?taskNo=${task.id}`}
-                className="flex-1"
+    <div className="flex flex-col gap-6 my-2">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <span>Tasks</span>
+            <Badge variant="secondary">{incompleteTasks.length}</Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {paginatedTasks.length > 0 ? (
+            paginatedTasks.map((task) => (
+              <div
+                key={task.id}
+                className="flex items-center justify-between py-3 border-b last:border-b-0 group"
               >
-                <p
-                  className={`text-base font-medium transition-colors duration-200 ${
-                    task.completed
-                      ? "line-through text-gray-400"
-                      : "text-gray-800"
-                  }`}
-                >
-                  {task.task}
-                </p>
-              </Link>
-            </div>
-          </div>
-        ))
-      ) : (
-        <div className="w-full flex items-center justify-center flex-col opacity-40">
-          <p>No tasks for the day!</p>
-          <Image
-            src={`/coffee.png`}
-            width={200}
-            height={200}
-            alt="coffee cup"
-          />
-        </div>
-      )}
-
-      {completedTasks && completedTasks.length > 0 && (
-        <p className="text-xs text-gray-500 mt-4 mb-1 px-2">Completed Tasks</p>
-      )}
-
-      {completedTasks && completedTasks.length > 0
-        ? completedTasks.map((task) => (
-            <div
-              key={task.id}
-              className="bg-gray-50 border border-gray-200 rounded-lg px-5 py-4 flex items-center justify-between shadow-sm hover:shadow transition group opacity-70"
-            >
-              <div className="flex items-center gap-3">
-                <input
-                  disabled
-                  type="checkbox"
-                  checked={task.completed!}
-                  className="accent-gray-800 h-5 w-5 rounded border-gray-300 transition-all duration-200"
-                  aria-label="Toggle complete"
-                />
-                <p
-                  className={`text-base font-medium transition-colors duration-200 ${
-                    task.completed
-                      ? "line-through text-gray-400"
-                      : "text-gray-800"
-                  }`}
-                >
-                  {task.task}
-                </p>
+                <div className="flex items-center gap-3 w-full">
+                  <Checkbox
+                    checked={!!task.completed}
+                    onCheckedChange={() => handleToggle(task.id)}
+                    disabled={isPending}
+                    className="h-5 w-5"
+                    aria-label="Toggle complete"
+                  />
+                  <Link
+                    href={`/dashboard/${task.project_id}/?taskNo=${task.id}`}
+                    className="flex-1"
+                  >
+                    <p
+                      className={`text-base font-medium transition-colors duration-200 ${
+                        task.completed
+                          ? "line-through text-gray-400"
+                          : "text-gray-800 group-hover:text-primary"
+                      }`}
+                    >
+                      {task.task}
+                    </p>
+                  </Link>
+                </div>
               </div>
+            ))
+          ) : (
+            <div className="w-full flex items-center justify-center flex-col opacity-40 py-8">
+              <p>No tasks for the day!</p>
+              <Image
+                src={`/coffee.png`}
+                width={120}
+                height={120}
+                alt="coffee cup"
+                className="mt-2"
+              />
             </div>
-          ))
-        : null}
+          )}
+        </CardContent>
+        {totalPages > 1 && (
+          <CardFooter>
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    aria-disabled={page === 1}
+                    className={page === 1 ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+                <PaginationItem>
+                  <span className="text-xs px-2">
+                    Page {page} of {totalPages}
+                  </span>
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    aria-disabled={page === totalPages}
+                    className={page === totalPages ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </CardFooter>
+        )}
+      </Card>
+
+      {completedTasks.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              Completed Tasks
+              <Badge variant="outline">{completedTasks.length}</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {completedTasks.map((task) => (
+              <div
+                key={task.id}
+                className="flex items-center justify-between py-3 border-b last:border-b-0 opacity-70"
+              >
+                <div className="flex items-center gap-3 w-full">
+                  <Checkbox
+                    checked={!!task.completed}
+                    disabled
+                    className="h-5 w-5"
+                    aria-label="Toggle complete"
+                  />
+                  <p
+                    className={`text-base font-medium transition-colors duration-200 ${
+                      task.completed
+                        ? "line-through text-gray-400"
+                        : "text-gray-800"
+                    }`}
+                  >
+                    {task.task}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

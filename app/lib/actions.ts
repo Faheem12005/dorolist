@@ -175,3 +175,26 @@ export async function fetchProjectOnId(projectId: string) {
     }
     return data;
 }
+
+export async function fetchProjectsAndTasks() {
+    const session = await auth();
+    if (!session?.user?.id) {
+        throw new Error("No user id in session");
+    }
+    const { supabaseAccessToken } = session;
+    const supabase = createServerClient(supabaseAccessToken!);
+
+    const { data, error } = await supabase.from('users').select(`
+        projects (
+            *,
+            tasks (*)
+        )
+    `).eq('id', session.user.id);
+
+    if (data) {
+        return data;
+    } else {
+        console.error("Database error: ", error);
+        throw new Error("Failed to fetch projects and tasks.");
+    }
+}

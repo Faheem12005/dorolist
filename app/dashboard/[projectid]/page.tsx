@@ -12,7 +12,7 @@ export default async function Page({
   const { projectid } = await params;
   const tasks = await fetchTasks(projectid);
   return (
-    <div className="w-full h-full flex flex-col">
+    <div className="h-full w-full flex flex-col p-6 flex-1">
       {/* <p className="text-3xl font-bold">{tasks?.projectName}</p> */}
       {/* <p>{tasks?.deadline ? new Date(tasks.deadline).toDateString() : "No deadline"}</p> */}
       <div className="w-full grid grid-cols-2 grow">

@@ -4,6 +4,8 @@ import Image from "next/image";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { fetchProjects } from "@/app/lib/actions";
+import { signOut } from "@/auth";
+import { redirect } from "next/navigation";
 
 export default async function Sidenav() {
   const session = await auth();
@@ -22,7 +24,7 @@ export default async function Sidenav() {
           />
         )}
       </div>
-      <div className="w-full px-2">
+      <div className="w-full px-2 flex-1 flex flex-col">
         <p className="px-2 py-2">Projects</p>
         <Link
           href="/dashboard/create"
@@ -33,6 +35,17 @@ export default async function Sidenav() {
         </Link>
         <ProjectLinks projects={projects[0].projects}/>
       </div>
+      <button
+        className="text-xs min-w-full w-full shrink-0 bg-primary-300 px-2 py-2 rounded-xs hover:bg-gray-200 hover:cursor-pointer"
+        style={{ marginTop: "auto" }}
+        onClick={async () => {
+          "use server";
+          await signOut();
+          redirect("/login");
+        }}
+      >
+        Logout
+      </button>
     </div>
   );
 }
