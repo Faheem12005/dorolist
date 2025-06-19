@@ -111,10 +111,15 @@ export async function AppSidebar() {
           <SidebarGroupLabel>Projects</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
+              <Button
+                asChild
+                className="w-full mb-3 justify-start px-3 py-2 font-medium bg-primary text-white hover:bg-primary/90 transition-colors"
+              >
+                <Link href="/dashboard/create">+ New Project</Link>
+              </Button>
               {(projects ?? []).map((project) => (
                 <Collapsible key={project.id} className="group/collapsible">
                   <SidebarMenuItem className="flex items-center justify-between">
-                    {/* Project Name Link (Clicking this navigates) */}
                     <SidebarMenuButton asChild>
                       <Link
                         href={`/dashboard/${project.id}`}
@@ -123,8 +128,6 @@ export async function AppSidebar() {
                         {project.name}
                       </Link>
                     </SidebarMenuButton>
-
-                    {/* Chevron (Clicking this toggles dropdown only) */}
                     <CollapsibleTrigger asChild>
                       <button className="ml-2 p-1 rounded hover:bg-muted">
                         <ChevronDownIcon className="h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
@@ -135,17 +138,16 @@ export async function AppSidebar() {
                   <CollapsibleContent>
                     <SidebarMenuSub>
                       {(project.tasks ?? []).map((task) => (
-                        <SidebarMenuSubItem
-                          className="flex items-center justify-between"
-                          key={task.id}
-                        >
+                        <SidebarMenuSubItem key={task.id}>
                           <SidebarMenuSubButton asChild>
-                            <Link
-                              className="flex-1 text-left"
-                              href={`/dashboard/${project.id}?taskNo=${task.id}`}
-                            >
-                              {task.task}
-                            </Link>
+                            <div className="w-full overflow-hidden">
+                              <Link
+                                href={`/dashboard/${project.id}?taskNo=${task.id}`}
+                                className="block overflow-hidden whitespace-nowrap truncate text-left max-w-full"
+                              >
+                                {task.task}
+                              </Link>
+                            </div>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
                       ))}

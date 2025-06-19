@@ -55,7 +55,7 @@ export default function AddTask(props: AddTaskProps) {
               id="name"
               name="taskName"
               minLength={5}
-              maxLength={30}
+              maxLength={250}
               required
               className="border border-gray-200 grow rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:border-gray-400 transition"
             />
